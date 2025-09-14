@@ -7,61 +7,8 @@
 - Выбирает **самый полезный продукт** и генерирует **персональный пуш** в корректном тоне (TOV).
 - Записывает `outputs/result.csv` с колонками: `client_code,product,push_notification`.
 
-**Структура данных**
-```
-data/
-  clients.csv                       — профиль клиентов: client_code,name,status,age,city,avg_monthly_balance_KZT
-  transactions/                     — транзакции за 3 мес. Можно:
-    transactions_3m.csv             — общий файл с колонками: date,category,amount,currency,client_code
-    client_XX_transactions_3m.csv   — либо отдельные файлы на клиента (любое число)
-  transfers/                        — (опционально) переводы с колонками: date,type,direction,amount,currency,client_code
-exchange_rates.json                 — ставки конвертации в KZT (можно править вручную)
-src/
-  main.py                           — точка входа (читайте README ниже)
-  data_loader.py
-  benefit.py
-  push_gen.py
-  utils.py
-outputs/
-  result.csv
-```
 
 **Как запустить**
 ```bash
-# вариант A: python
-python -m src.main
-
-# вариант B:
-python src/main.py
-```
-
-**Предположения/упрощения (важно)**
-- Если нет файла переводов (`data/transfers/…`), экономия на комиссиях и FX-операциях оценивается консервативно либо 0.
-- Если по клиенту нет транзакций, рекомендация строится по остатку: подбираем вклад (сбер/накопительный) по максимальной ставке.
-- Для расчётов все суммы приводятся к KZT по `exchange_rates.json`. Эти курсы можно скорректировать вручную.
-- Лимиты на кешбэк по продуктам сведены к простым эвристикам (их легко добавить в `benefit.py` при появлении точных правил).
-
-**Лицензия**
-MIT.
-
-
-## ML-этап (teacher → student)
-
-- `src/train.py` строит признаки и «учит» модели:
-  - per-product **RandomForestRegressor** (прогноз ожидаемой выгоды),
-  - **RandomForestClassifier** (лучший продукт).
-  Учительские таргеты берутся из формул в `benefit.py` (прозрачная база).
-
-- `src/main_ml.py` — инференс через ML:
-  - строит признаки для клиента,
-  - предсказывает выгоду по каждому продукту,
-  - выбирает топ-1,
-  - генерирует персональный пуш.
-
-Модели сохраняются в `models/*.joblib`. Если моделей нет — падаем на понятный **rule-based** фолбэк.
-
-### Команды
-```bash
-python -m src.train        # обучить модели
-python -m src.main_ml      # запустить инференс с моделями (выход: outputs/result_ml.csv)
+python build_pushes.py
 ```
